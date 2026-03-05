@@ -89,19 +89,27 @@ def get_planet(planet_id):
 @app.route('/users/favorites', methods=['GET'])
 def get_favorites():
     first_user_id = User.query.first().serialize()['id']
-    print(first_user_id)
+  
     
-    all_fav_chars = FavChar.query.filter_by(id_user=first_user_id)
-    all_fav_planets = FavPlanet.query.filter_by(id_user=first_user_id)
-    print(all_fav_chars)
-    print(all_fav_planets)
+    all_fav_chars_ids = list(map(lambda fav_character:  fav_character.serialize()['id'] , FavChar.query.filter_by(id_user=first_user_id).all()))
+    all_fav_planets_ids = list(map(lambda fav_planet: fav_planet.serialize()['id'] , FavPlanet.query.filter_by(id_user=first_user_id).all()))
 
+    all_fav_chars = list(map(lambda character: Character.query.get(character) , all_fav_chars_ids))
+    all_fav_planets = list(map(lambda planet: Planet.query.get(planet) , all_fav_planets_ids))
+
+    print(all_fav_chars)
+    print('###########')
+
+    all_fav_chars_details = list(map(lambda character: character.serialize(), all_fav_chars))
+    all_fav_planets_details = list(map(lambda planet: planet.serialize(), all_fav_planets))
+
+    print(all_fav_chars_details)
     response_body = {
-        "characters": "Hello, this is your GET /user response ",
-        "planets" : "list_of_users"
+        "characters": all_fav_chars_details,
+        "planets" : all_fav_planets_details
     }
 
-    return "jsonify(list_of_users)", 200
+    return jsonify(response_body), 200
 
 
 
