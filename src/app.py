@@ -2,6 +2,7 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 import os
+from datetime import datetime
 from flask import Flask, request, jsonify, url_for
 from flask_migrate import Migrate
 from flask_swagger import swagger
@@ -9,6 +10,7 @@ from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
 from models import db, User, Character, Planet, FavChar, FavPlanet
+from sqlalchemy import select
 #from models import Person
 
 app = Flask(__name__)
@@ -110,6 +112,54 @@ def get_favorites():
     }
 
     return jsonify(response_body), 200
+
+@app.route('/favorite/planet/<int:planet_id>', methods=['POST', 'DELETE'])
+def manage_fav_planet(planet_id):
+    first_user_id = User.query.first().serialize()['id']
+    
+    all_fav_planets_ids = list(map(lambda fav_planet: fav_planet.serialize()['id_planet'] , FavPlanet.query.filter_by(id_user=first_user_id).all()))
+    
+    if (request.method == 'POST'):
+        if (planet_id in all_fav_planets_ids):
+            return ('planet already in favorites', 400)
+        else:
+            fav_planet = FavPlanet(id_user=first_user_id, id_planet= planet_id, date='today')
+            db.session.add(fav_planet)
+            db.session.commit()
+            return (f'{planet_id} added to favorites', 200)
+    else:
+        if (planet_id not in all_fav_planets_ids):
+            return ('planet is not in favorites', 400)
+        else:
+            fav_planet = db.session.execute(select(FavPlanet).where(FavPlanet.id_planet == planet_id)).scalar_one_or_none()
+            db.session.delete(fav_planet)
+            db.session.commit()
+            return (f'{planet_id} erased from favorites', 200)
+
+
+
+@app.route('/favorite/character/<int:character_id>', methods=['POST', 'DELETE'])
+def manage_fav_character(character_id):
+    first_user_id = User.query.first().serialize()['id']
+    
+    all_fav_chars_ids = list(map(lambda fav_character:  fav_character.serialize()['id_char'] , FavChar.query.filter_by(id_user=first_user_id).all()))
+    
+    if (request.method == 'POST'):
+        if (character_id in all_fav_chars_ids):
+            return ('character already in favorites', 400)
+        else:
+            fav_character = FavChar(id_user=first_user_id, id_char= character_id, date='today')
+            db.session.add(fav_character)
+            db.session.commit()
+            return (f'{character_id} added to favorites', 200)
+    else:
+        if (character_id not in all_fav_chars_ids):
+            return ('character is not in favorites', 400)
+        else:
+            fav_character = db.session.execute(select(FavChar).where(FavChar.id_char == character_id)).scalar_one_or_none()
+            db.session.delete(fav_character)
+            db.session.commit()
+            return (f'{character_id} erased from favorites', 200)
 
 
 
