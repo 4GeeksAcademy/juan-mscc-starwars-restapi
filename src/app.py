@@ -65,6 +65,8 @@ def get_characters():
 def get_character(character_id):
 
     character = Character.query.filter_by(id=character_id).first()
+    if character is None:
+        return ('Character does not exist')
     character_info = character.serialize()
     print(character_info)
 
@@ -83,6 +85,8 @@ def get_planets():
 def get_planet(planet_id):
 
     planet = Planet.query.filter_by(id=planet_id).first()
+    if planet is None:
+        return ('Planet does not exist')
     planet_info = planet.serialize()
 
     return jsonify(planet_info), 200
