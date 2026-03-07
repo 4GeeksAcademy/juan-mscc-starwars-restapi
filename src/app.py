@@ -45,10 +45,6 @@ def get_users():
     list_of_users = list(map(lambda user: user.serialize(), all_users))
     print(list_of_users)
 
-    response_body = {
-        "msg": "Hello, this is your GET /user response ",
-        "results" : list_of_users
-    }
 
     return jsonify(list_of_users), 200
 
@@ -121,6 +117,11 @@ def get_favorites():
 def manage_fav_planet(planet_id):
     first_user_id = User.query.first().serialize()['id']
     
+    list_of_planets_id = list(map(lambda planet: planet.serialize()['id'], Planet.query.all()))
+
+    if (planet_id not in list_of_planets_id):
+        return ('planet does not exist', 400)
+
     all_fav_planets_ids = list(map(lambda fav_planet: fav_planet.serialize()['id_planet'] , FavPlanet.query.filter_by(id_user=first_user_id).all()))
     
     if (request.method == 'POST'):
@@ -145,6 +146,11 @@ def manage_fav_planet(planet_id):
 @app.route('/favorite/character/<int:character_id>', methods=['POST', 'DELETE'])
 def manage_fav_character(character_id):
     first_user_id = User.query.first().serialize()['id']
+
+    list_of_characters_id = list(map(lambda character: character.serialize()['id'], Character.query.all()))
+
+    if (character_id not in list_of_characters_id):
+        return ('character does not exist', 400)
     
     all_fav_chars_ids = list(map(lambda fav_character:  fav_character.serialize()['id_char'] , FavChar.query.filter_by(id_user=first_user_id).all()))
     
